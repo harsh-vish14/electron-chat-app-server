@@ -1,0 +1,21 @@
+{
+  "name": "esd-formative-assignment-2",
+  "version": "1.0.0",
+  "description": "TODO LIST",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon app.js",
+    "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "Harshkumar Vishwakarma",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^14.2.0",
+    "express": "^4.17.2",
+    "mongoose": "^6.1.7",
+    "zod": "^3.21.4"
+  }
+}
