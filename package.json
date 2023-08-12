@@ -1,7 +1,7 @@
 {
-  "name": "esd-formative-assignment-2",
+  "name": "electron-app-server",
   "version": "1.0.0",
-  "description": "TODO LIST",
+  "description": "electron chat app server",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon app.js",
