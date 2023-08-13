@@ -11,6 +11,7 @@
   "author": "Harshkumar Vishwakarma",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.0",
     "chalk": "^4.1.2",
     "cors": "^2.8.5",
     "dotenv": "^14.2.0",
