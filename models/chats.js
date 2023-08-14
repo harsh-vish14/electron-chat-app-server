@@ -11,6 +11,10 @@ const chatsSchema = new mongoose.Schema(
       ref: "Group",
       required: [true, "PLease provide group id"],
     },
+    publicNotification: {
+      type: String,
+      trim: true,
+    },
     message: {
       type: String,
       required: [true, "Please provide message"],

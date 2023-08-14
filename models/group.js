@@ -16,6 +16,12 @@ const GroupSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    blacklistedUsers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );
