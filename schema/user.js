@@ -27,3 +27,11 @@ exports.userLoginSchema = z.object({
     .string({ message: "Please provide password" })
     .min(8, "password must be at-least 8 characters"),
 });
+
+exports.userDetailsUpdates = z.object({
+  email: z
+    .string({ message: "Please provide email" })
+    .email({ message: "Invalid email address" }),
+  avatar: z.string({ message: "Please provide avatar url" }),
+  name: z.string({ message: "Please provide name" }),
+});

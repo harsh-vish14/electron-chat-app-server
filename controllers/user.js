@@ -1,7 +1,11 @@
 const ErrorResponse = require("../helper/ErrorResponse");
 const user = require("../models/user");
 const tokenSchema = require("../models/token");
-const { userSignInSchema, userLoginSchema } = require("../schema/user");
+const {
+  userSignInSchema,
+  userLoginSchema,
+  userDetailsUpdates,
+} = require("../schema/user");
 const jwt = require("jsonwebtoken");
 const { hashPassword, comparePasswords } = require("../helper/passowrd");
 const { generateKeyPair } = require("../helper/generateKeys");
@@ -95,13 +99,58 @@ exports.login = async (req, res) => {
   const thirtyDaysFromNow = new Date(currentDate);
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-  await tokenSchema.updateOne({
-    uid: userData._id,
-    expiration: thirtyDaysFromNow.toISOString(),
-  });
+  await tokenSchema.updateOne(
+    { uid: userData._id },
+    {
+      tokenId: token,
+      expiration: thirtyDaysFromNow.toISOString(),
+    }
+  );
 
   // sending token in cookie
   res.cookie("token", token, { httpOnly: true, secure: true }); // Make sure to use 'secure: true' if using HTTPS
 
   return res.status(200).json({ message: "Logged In Successfully" });
+};
+
+exports.updateDetails = async (req, res) => {
+  const response = userDetailsUpdates.safeParse(req.body);
+  const { name, email, avatar } = req.body;
+
+  if (!response.success) {
+    return res.status(400).json({ message: response.error.errors });
+  }
+
+  const userDetails = req.userDetails;
+  await user.updateOne({ email }, { name, avatar });
+
+  const token = await jwt.sign(
+    {
+      name,
+      email: userDetails.email,
+      avatar,
+      _id: userDetails._id,
+      keys: userDetails.keys,
+    },
+    process.env.SECRET_KEY,
+    {
+      expiresIn: "30d",
+    }
+  );
+
+  const currentDate = new Date();
+  const thirtyDaysFromNow = new Date(currentDate);
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+  await tokenSchema.updateOne(
+    { uid: userDetails._id },
+    {
+      tokenId: token,
+      expiration: thirtyDaysFromNow.toISOString(),
+    }
+  );
+
+  // sending token in cookie
+  res.cookie("token", token, { httpOnly: true, secure: true }); // Make sure to use 'secure: true' if using HTTPS
+  return res.status(200).json({ message: "User updated successfully" });
 };

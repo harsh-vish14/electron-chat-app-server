@@ -7,6 +7,7 @@ const routes = require("./routers");
 const chalk = require("chalk");
 const errorHandler = require("./helper/errorHandler");
 const { removeEmptyValues } = require("./middleware/removeNullValues");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 app.use(removeEmptyValues);
 app.use(errorHandler);
+app.use(cookieParser());
 app.use("/api/v1", routes);
 
 const PORT = process.env.PORT || 5000;
