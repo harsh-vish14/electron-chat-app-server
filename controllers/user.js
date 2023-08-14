@@ -1,4 +1,3 @@
-const ErrorResponse = require("../helper/ErrorResponse");
 const user = require("../models/user");
 const tokenSchema = require("../models/token");
 const {
