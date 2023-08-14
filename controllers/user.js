@@ -4,6 +4,7 @@ const tokenSchema = require("../models/token");
 const { userSignInSchema, userLoginSchema } = require("../schema/user");
 const jwt = require("jsonwebtoken");
 const { hashPassword, comparePasswords } = require("../helper/passowrd");
+const { generateKeyPair } = require("../helper/generateKeys");
 
 exports.getAllUsers = async (req, res) => {
   const users = await user.find({});
@@ -21,8 +22,14 @@ exports.userSignIn = async (req, res) => {
     return res.status(400).json({ message: "User already exists" });
   }
 
+  const keys = generateKeyPair();
+
   const hashedPassword = await hashPassword(req.body.password);
-  const userData = await user.create({ ...req.body, password: hashedPassword });
+  const userData = await user.create({
+    ...req.body,
+    password: hashedPassword,
+    keys,
+  });
 
   // token generation
   const token = await jwt.sign(
@@ -31,6 +38,7 @@ exports.userSignIn = async (req, res) => {
       email: userData.email,
       avatar: userData.avatar,
       _id: userData._id,
+      keys,
     },
     process.env.SECRET_KEY,
     {
