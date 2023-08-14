@@ -22,6 +22,18 @@ const userSchema = new mongoose.Schema(
       default:
         "https://t4.ftcdn.net/jpg/04/10/43/77/360_F_410437733_hdq4Q3QOH9uwh0mcqAhRFzOKfrCR24Ta.jpg",
     },
+    keys: {
+      public: {
+        type: String,
+        trim: true,
+        required: [true, "Please provide public key of user"],
+      },
+      private: {
+        type: String,
+        trim: true,
+        required: [true, "Please provide private key of user"],
+      },
+    },
   },
   { timestamps: true }
 );
