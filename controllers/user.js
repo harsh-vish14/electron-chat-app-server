@@ -83,6 +83,7 @@ exports.login = async (req, res) => {
       email: userData.email,
       avatar: userData.avatar,
       _id: userData._id,
+      keys: userData.keys,
     },
     process.env.SECRET_KEY,
     {
