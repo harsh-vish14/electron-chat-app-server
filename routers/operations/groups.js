@@ -1,8 +1,7 @@
 const express = require("express");
+const { makeGroup } = require("../../controllers/group");
 const router = express.Router();
 
-router.get("/", function (req, res) {
-  return res.json({ message: "Hello!", user: req?.userDetails || "null" });
-});
+router.post("/", makeGroup);
 
 module.exports = router;

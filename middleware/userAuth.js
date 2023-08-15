@@ -5,11 +5,10 @@ const user = require("../models/user");
 
 exports.userAuth = async (req, res, next) => {
   const token = req.cookies.token;
-  console.log({ token });
+
   if (!token) {
     return res.status(401).send({ message: "User is not authorized" }); // Unauthorized
   }
-  console.log({ token });
 
   try {
     const tokenDetails = await jwt.verify(token, process.env.SECRET_KEY);
@@ -19,7 +18,7 @@ exports.userAuth = async (req, res, next) => {
         .send({ message: "Token has expired, Please try login again." });
     }
 
-    const userData = await user.findOne({ email: req.body.email });
+    const userData = await user.findOne({ email: tokenDetails.email });
     if (!userData) {
       return res.status(404).json({ message: "Email Does not exists" });
     }
