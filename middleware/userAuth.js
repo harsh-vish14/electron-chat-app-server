@@ -5,9 +5,11 @@ const user = require("../models/user");
 
 exports.userAuth = async (req, res, next) => {
   const token = req.cookies.token;
+  console.log({ token });
   if (!token) {
-    return res.sendStatus(401).send({ message: "User is not authorized" }); // Unauthorized
+    return res.status(401).send({ message: "User is not authorized" }); // Unauthorized
   }
+  console.log({ token });
 
   try {
     const tokenDetails = await jwt.verify(token, process.env.SECRET_KEY);
@@ -26,6 +28,6 @@ exports.userAuth = async (req, res, next) => {
     next(); // Move to the next middleware or route handler
   } catch (err) {
     console.log("middelware: ", err);
-    return res.sendStatus(403); // Forbidden
+    return res.status(403); // Forbidden
   }
 };

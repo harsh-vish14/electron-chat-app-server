@@ -1,8 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const routes = require("./operations/users");
+const userRoutes = require("./operations/users");
+const groupRoutes = require("./operations/groups");
+const { userAuth } = require("../middleware/userAuth");
 
-// users routes
-router.use("/user", routes);
+router.use("/user", userRoutes);
+
+router.use("/group", userAuth, groupRoutes);
 
 module.exports = router;
