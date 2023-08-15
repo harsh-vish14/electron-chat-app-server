@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 const GroupSchema = new mongoose.Schema(
   {
+    title: {
+      type: String,
+      required: [true, "Please Provide group title"],
+      trim: true,
+    },
     description: {
       type: String,
       trim: true,
@@ -9,6 +14,18 @@ const GroupSchema = new mongoose.Schema(
       type: String,
       default: "https://geodash.gov.bd/uploaded/people_group/default_group.png",
       trim: true,
+    },
+    keys: {
+      public: {
+        type: String,
+        trim: true,
+        required: [true, "Please provide public key of user"],
+      },
+      private: {
+        type: String,
+        trim: true,
+        required: [true, "Please provide private key of user"],
+      },
     },
     users: [
       {
