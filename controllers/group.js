@@ -52,6 +52,7 @@ exports.makeGroup = async (req, res) => {
 
 exports.joinGroup = async (req, res) => {
   const { userId, groupId } = req.body;
+  userId = mongoose.Types.ObjectId(userId);
 
   const userDetails = await user.findOne({ _id: userId });
   if (!userDetails) {
@@ -63,15 +64,16 @@ exports.joinGroup = async (req, res) => {
     return res.status(404).json({ message: "Invalid Group ID" });
   }
 
-  if (isUserInList(mongoose.Types.ObjectId(userId), groupdetails.users)) {
+  if (isUserInList(userId, groupdetails.users)) {
     return res.status(200).json({ message: "User already exists in group" });
   }
 
-  if (userId in groupdetails.blacklistedUsers) {
+  if (isUserInList(userId, groupdetails.blacklistedUsers)) {
     return res
       .status(401)
       .json({ message: "You have been blacklisted, by the admin" });
   }
+
   await group.updateOne(
     { _id: groupdetails._id },
     { $push: { users: userId } }
@@ -103,3 +105,94 @@ exports.joinGroup = async (req, res) => {
     },
   });
 };
+
+exports.ExitGroup = async (req, res) => {
+  const { groupId } = req.body;
+  const userDetails = req.userDetails;
+  const userId = mongoose.Types.ObjectId(userDetails._id);
+
+  const groupdetails = await group.findOne({ groupId });
+  if (!groupdetails) {
+    return res.status(404).json({ message: "Invalid Group ID" });
+  }
+
+  await group.updateOne({ _id: groupId }, { $pull: { users: userId } });
+  return res.status(200).json({ message: "User Removed Successfully" });
+};
+
+exports.addBlackListUser = async (userId, groupId) => {
+  userId = mongoose.Types.ObjectId(userId);
+  groupId = groupId;
+
+  const userDetails = await user.findOne({ _id: userId });
+  if (!userDetails) {
+    return { message: "User not found", success: false };
+  }
+
+  const groupdetails = await group.findOne({ groupId });
+  if (!groupdetails) {
+    return { message: "Group not Found", success: false };
+  }
+
+  if (!isUserInList(userId, groupdetails.admins)) {
+    return { message: "Unauthorized", success: false };
+  }
+
+  await group.updateOne(
+    { _id: groupdetails._id },
+    { $push: { blacklistedUsers: userId } }
+  );
+  return { message: "User blacklisted successfully", success: true };
+};
+
+exports.removeBlackListUser = async (userId, groupId) => {
+  userId = mongoose.Types.ObjectId(userId);
+  groupId = groupId;
+
+  const userDetails = await user.findOne({ _id: userId });
+  if (!userDetails) {
+    return { message: "User not found", success: false };
+  }
+
+  const groupdetails = await group.findOne({ groupId });
+  if (!groupdetails) {
+    return { message: "Group not Found", success: false };
+  }
+
+  if (!isUserInList(userId, groupdetails.admins)) {
+    return { message: "Unauthorized", success: false };
+  }
+
+  await group.updateOne(
+    { _id: groupdetails._id },
+    { $pull: { blacklistedUsers: userId } }
+  );
+
+  return { message: "User removed blacklisted Successfully", success: true };
+};
+
+exports.getAllUserGroups = async (req, res) => {
+  const userDetails = req.userDetails;
+  try {
+    const groups = await group.aggregate([
+      {
+        $match: { users: mongoose.Types.ObjectId(userDetails._id) }, // Match the specified user's ObjectId in the users array
+      },
+      {
+        $project: {
+          title: 1,
+          avatar: 1,
+          userCount: { $size: "$users" },
+        },
+      },
+    ]);
+
+    return res.status(200).json({ groups });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "server error occurred, please try again later" });
+  }
+};
+
+// TODO: get group details per id
