@@ -7,6 +7,7 @@ const { generateKeyPair } = require("../helper/generateKeys");
 const group = require("../models/group");
 const user = require("../models/user");
 const { isUserInList } = require("../helper/userPresent");
+const chats = require("../models/chats");
 
 exports.makeGroup = async (req, res) => {
   const userDetails = req.userDetails;
@@ -50,14 +51,13 @@ exports.makeGroup = async (req, res) => {
   });
 };
 
-exports.joinGroup = async (req, res) => {
-  const { userId, groupId } = req.body;
-  userId = mongoose.Types.ObjectId(userId);
+// TODO: check all functions from below
 
-  const userDetails = await user.findOne({ _id: userId });
-  if (!userDetails) {
-    return res.status(404).json({ message: "User not found" });
-  }
+exports.joinGroup = async (req, res) => {
+  const { groupId } = req.body;
+  userDetails = req.userDetails;
+
+  const userId = mongoose.Types.ObjectId(userDetails._id);
 
   const groupdetails = await group.findOne({ groupId });
   if (!groupdetails) {
@@ -122,19 +122,23 @@ exports.ExitGroup = async (req, res) => {
 
 exports.addBlackListUser = async (userId, groupId) => {
   userId = mongoose.Types.ObjectId(userId);
-  groupId = groupId;
+  groupId = mongoose.Types.ObjectId(groupId);
+
+  const loggedUser = req.userDetails;
 
   const userDetails = await user.findOne({ _id: userId });
   if (!userDetails) {
     return { message: "User not found", success: false };
   }
 
-  const groupdetails = await group.findOne({ groupId });
+  const groupdetails = await group.findOne({ _id: groupId });
   if (!groupdetails) {
     return { message: "Group not Found", success: false };
   }
 
-  if (!isUserInList(userId, groupdetails.admins)) {
+  if (
+    !isUserInList(mongoose.Types.ObjectId(loggedUser._id), groupdetails.admins)
+  ) {
     return { message: "Unauthorized", success: false };
   }
 
@@ -147,14 +151,14 @@ exports.addBlackListUser = async (userId, groupId) => {
 
 exports.removeBlackListUser = async (userId, groupId) => {
   userId = mongoose.Types.ObjectId(userId);
-  groupId = groupId;
+  groupId = mongoose.Types.ObjectId(groupId);
 
   const userDetails = await user.findOne({ _id: userId });
   if (!userDetails) {
     return { message: "User not found", success: false };
   }
 
-  const groupdetails = await group.findOne({ groupId });
+  const groupdetails = await group.findOne({ _id: groupId });
   if (!groupdetails) {
     return { message: "Group not Found", success: false };
   }
@@ -195,4 +199,92 @@ exports.getAllUserGroups = async (req, res) => {
   }
 };
 
-// TODO: get group details per id
+exports.getGroupDetails = async (req, res) => {
+  const { groupId } = req.body;
+  const userDetails = req.userDetails;
+
+  const groupdetails = await group
+    .findOne({ _id: mongoose.Types.ObjectId(groupId) })
+    .populate({
+      path: "users",
+      select: "name avatar _id", // Only select name and avatar fields and _id
+    });
+
+  if (!groupdetails) {
+    return res.status(404).json({ message: "Invalid Group ID" });
+  }
+
+  if (
+    !isUserInList(mongoose.Types.ObjectId(userDetails._id), groupdetails.users)
+  ) {
+    return res.status(200).json({ message: "User Does not exist" });
+  }
+
+  const encryptedData = groupKeysEncryption(
+    groupdetails.keys.private,
+    groupdetails.keys.public,
+    userDetails.keys.public
+  );
+  const blacklisted = isUserInList(
+    mongoose.Types.ObjectId(userDetails._id),
+    groupdetails.blacklistedUsers
+  );
+
+  if (blacklisted) {
+    return res.status(200).json({
+      group: {
+        keys: encryptedData,
+        blacklisted,
+        chats: [],
+        details: {
+          _id: groupdetails._id,
+          title: groupdetails.title,
+          description: groupdetails.description,
+          users: groupdetails.users,
+          groupId: groupdetails.groupId,
+          admins: groupdetails.admins,
+        },
+      },
+    });
+  }
+
+  const chats = await chats.find({ gid: groupdetails._id }).populate({
+    path: "users",
+    select: "name avatar _id",
+  });
+
+  return res.status(200).json({
+    group: {
+      keys: encryptedData,
+      blacklisted,
+      chats,
+      details: {
+        _id: groupdetails._id,
+        title: groupdetails.title,
+        description: groupdetails.description,
+        users: groupdetails.users,
+        groupId: groupdetails.groupId,
+        admins: groupdetails.admins,
+      },
+    },
+  });
+};
+
+exports.makeAdmin = async (req, res) => {
+  const { groupId, userId } = req.body;
+  // const userDetails = req.userDetails;
+
+  const userDetails = await user.findOne({ _id: userId });
+  if (!userDetails) {
+    return { message: "User not found", success: false };
+  }
+
+  const groupdetails = await group.findOne({ _id: groupId });
+  if (!groupdetails) {
+    return { message: "Group not Found", success: false };
+  }
+
+  if (!isUserInList(userId, groupdetails.admins)) {
+    return { message: "Unauthorized", success: false };
+  }
+};
