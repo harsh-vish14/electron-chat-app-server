@@ -52,7 +52,6 @@ exports.makeGroup = async (req, res) => {
 };
 
 // TODO: check all functions from below
-
 exports.joinGroup = async (req, res) => {
   const { groupId } = req.body;
   userDetails = req.userDetails;
@@ -152,6 +151,7 @@ exports.addBlackListUser = async (userId, groupId) => {
 exports.removeBlackListUser = async (userId, groupId) => {
   userId = mongoose.Types.ObjectId(userId);
   groupId = mongoose.Types.ObjectId(groupId);
+  const loggedUser = req.userDetails;
 
   const userDetails = await user.findOne({ _id: userId });
   if (!userDetails) {
@@ -163,7 +163,9 @@ exports.removeBlackListUser = async (userId, groupId) => {
     return { message: "Group not Found", success: false };
   }
 
-  if (!isUserInList(userId, groupdetails.admins)) {
+  if (
+    !isUserInList(mongoose.Types.ObjectId(loggedUser._id), groupdetails.admins)
+  ) {
     return { message: "Unauthorized", success: false };
   }
 
@@ -272,19 +274,42 @@ exports.getGroupDetails = async (req, res) => {
 
 exports.makeAdmin = async (req, res) => {
   const { groupId, userId } = req.body;
-  // const userDetails = req.userDetails;
+  const loggedUser = req.userDetails;
 
-  const userDetails = await user.findOne({ _id: userId });
+  const userDetails = await user.findOne({
+    _id: mongoose.Types.ObjectId(userId),
+  });
   if (!userDetails) {
-    return { message: "User not found", success: false };
+    return res.status(404).json({ message: "User not found", success: false });
   }
 
   const groupdetails = await group.findOne({ _id: groupId });
   if (!groupdetails) {
-    return { message: "Group not Found", success: false };
+    return res.status(404).json({ message: "Group not Found", success: false });
   }
 
-  if (!isUserInList(userId, groupdetails.admins)) {
-    return { message: "Unauthorized", success: false };
+  if (
+    !isUserInList(mongoose.Types.ObjectId(loggedUser._id), groupdetails.admins)
+  ) {
+    return res.status(401).json({ message: "Unauthorized", success: false });
   }
+
+  if (
+    !isUserInList(mongoose.Types.ObjectId(userDetails._id), groupdetails.users)
+  ) {
+    return res
+      .status(404)
+      .json({ message: "User is not in This group", success: false });
+  }
+
+  if (isUserInList(mongoose.Types.ObjectId(userId), groupdetails.admins)) {
+    return res
+      .status(200)
+      .json({ message: "User is already admin", success: false });
+  }
+
+  await group.updateOne({ _id: groupId }, { $push: { admins: userId } });
+  return res
+    .status(200)
+    .json({ message: "User made admin successfully", success: true });
 };
