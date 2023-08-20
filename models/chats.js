@@ -15,6 +15,10 @@ const chatsSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    deleted: {
+      type: Boolean,
+      default: false,
+    },
     message: {
       type: String,
       required: [true, "Please provide message"],

@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema(
         required: [true, "Please provide private key of user"],
       },
     },
+    configurations: {
+      type: Object,
+      default: {},
+    },
   },
   { timestamps: true }
 );

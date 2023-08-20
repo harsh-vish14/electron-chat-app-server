@@ -40,6 +40,7 @@ exports.userSignIn = async (req, res) => {
       name: userData.name,
       email: userData.email,
       avatar: userData.avatar,
+      config: userData.configurations,
       _id: userData._id,
       keys,
     },
@@ -87,6 +88,7 @@ exports.login = async (req, res) => {
       avatar: userData.avatar,
       _id: userData._id,
       keys: userData.keys,
+      config: userData.configurations,
     },
     process.env.SECRET_KEY,
     {
@@ -130,6 +132,7 @@ exports.updateDetails = async (req, res) => {
       avatar,
       _id: userDetails._id,
       keys: userDetails.keys,
+      config: userData.configurations,
     },
     process.env.SECRET_KEY,
     {

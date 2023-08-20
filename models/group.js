@@ -38,6 +38,12 @@ const GroupSchema = new mongoose.Schema(
         required: [true, "Please provide private key of user"],
       },
     },
+    readOnly: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     users: [
       {
         type: mongoose.Schema.Types.ObjectId,
