@@ -44,10 +44,19 @@ const GroupSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    showOldChats: {
+      type: Boolean,
+      default: false,
+    },
     users: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        joinedAt: {
+          type: Date,
+        },
       },
     ],
     blacklistedUsers: [
@@ -59,6 +68,17 @@ const GroupSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Middleware to set joinedAt date before saving a user
+GroupSchema.pre("save", function (next) {
+  const currentDate = new Date();
+  for (const user of this.users) {
+    if (!user.joinedAt) {
+      user.joinedAt = currentDate;
+    }
+  }
+  next();
+});
 
 // Custom pre-save hook to generate unique groupId based on title
 GroupSchema.pre("save", async function (next) {

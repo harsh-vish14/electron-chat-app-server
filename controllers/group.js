@@ -8,7 +8,6 @@ const group = require("../models/group");
 const user = require("../models/user");
 const { isUserInList } = require("../helper/userPresent");
 const user = require("../models/user");
-const chats = require("../models/chats");
 const { chatsForGroup } = require("./chats");
 
 exports.makeGroup = async (req, res) => {
@@ -20,12 +19,12 @@ exports.makeGroup = async (req, res) => {
     avatar: req.body.avatar,
     keys,
     admins: [userDetails._id],
-    users: [userDetails._id],
+    users: [{ id: userDetails._id, joinedAt: new Date() }],
   });
 
   const groupDetails = await group.findOne({ _id: newGroup._id }).populate({
-    path: "users",
-    select: "name avatar _id", // Only select name and avatar fields and exclude _id
+    path: "users.id",
+    select: "name avatar joinedAt _id", // Only select name and avatar fields and exclude _id
   });
 
   const encryptedData = groupKeysEncryption(
@@ -76,12 +75,12 @@ exports.joinGroup = async (req, res) => {
 
   await group.updateOne(
     { _id: groupdetails._id },
-    { $push: { users: userId } }
+    { $push: { users: { id: userId, joinedAt: new Date() } } }
   );
 
   const groupDetails = await group.findOne({ _id: groupdetails._id }).populate({
-    path: "users",
-    select: "name avatar _id", // Only select name and avatar fields and _id
+    path: "users.id",
+    select: "name avatar joinedAt _id", // Only select name and avatar fields and _id
   });
 
   const encryptedData = groupKeysEncryption(
@@ -116,7 +115,7 @@ exports.ExitGroup = async (req, res) => {
     return res.status(404).json({ message: "Invalid Group ID" });
   }
 
-  await group.updateOne({ _id: groupId }, { $pull: { users: userId } });
+  await group.updateOne({ _id: groupId }, { $pull: { users: { id: userId } } });
   return res.status(200).json({ message: "User Removed Successfully" });
 };
 
@@ -186,6 +185,7 @@ exports.getAllUserGroups = async (req, res) => {
         $project: {
           title: 1,
           avatar: 1,
+          joinedAt: 1,
           userCount: { $size: "$users" },
         },
       },
@@ -206,8 +206,8 @@ exports.getGroupDetails = async (req, res) => {
   const groupdetails = await group
     .findOne({ _id: mongoose.Types.ObjectId(groupId) })
     .populate({
-      path: "users",
-      select: "name avatar _id", // Only select name and avatar fields and _id
+      path: "users.id",
+      select: "name avatar _id joinedAt", // Only select name and avatar fields _id and joinedAt
     });
 
   if (!groupdetails) {
@@ -248,12 +248,19 @@ exports.getGroupDetails = async (req, res) => {
     });
   }
 
-  // const chats = await chats.find({ gid: groupdetails._id }).populate({
-  //   path: "users",
-  //   select: "name avatar _id",
-  // });
+  const userJointedAt = "";
+  const groupsUsers = groupdetails.users;
+  for (let i = 0; i < groupsUsers.length; i++) {
+    if (groupsUsers[i]._id == userDetails._id) {
+      userJointedAt = groupsUsers[i].joinedAt;
+    }
+  }
 
-  const chats = await chatsForGroup(groupdetails._id);
+  const chats = await chatsForGroup(
+    groupdetails._id,
+    userJointedAt,
+    groupdetails.showOldChats
+  );
 
   return res.status(200).json({
     group: {
