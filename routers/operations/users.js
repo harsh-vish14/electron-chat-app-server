@@ -1,6 +1,6 @@
 const express = require("express");
 const {
-  userSignIn,
+  userSignUp,
   getAllUsers,
   login,
   updateDetails,
@@ -10,7 +10,7 @@ const { userAuth } = require("../../middleware/userAuth");
 const router = express.Router();
 
 router.get("/", getAllUsers);
-router.post("/signin", userSignIn);
+router.post("/signup", userSignUp);
 router.post("/login", login);
 router.post("/update", userAuth, updateDetails);
 

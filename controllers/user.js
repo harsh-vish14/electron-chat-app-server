@@ -14,15 +14,19 @@ exports.getAllUsers = async (req, res) => {
   return res.status(200).json(users);
 };
 
-exports.userSignIn = async (req, res) => {
+exports.userSignUp = async (req, res) => {
   const response = userSignInSchema.safeParse(req.body);
   if (!response.success) {
-    return res.status(400).json({ message: response.error.errors });
+    return res
+      .status(400)
+      .json({ success: false, message: response.error.errors });
   }
 
   const userExits = await user.findOne({ email: req.body.email });
   if (userExits) {
-    return res.status(400).json({ message: "User already exists" });
+    return res
+      .status(400)
+      .json({ success: false, message: "User already exists" });
   }
 
   const keys = generateKeyPair();
@@ -62,23 +66,31 @@ exports.userSignIn = async (req, res) => {
 
   // sending token in cookie
   res.cookie("token", token, { httpOnly: true, secure: true }); // Make sure to use 'secure: true' if using HTTPS
-  return res.status(200).json({ message: "Signing Successfully" });
+  return res
+    .status(200)
+    .json({ success: true, message: "Signing Successfully" });
 };
 
 exports.login = async (req, res) => {
   const response = userLoginSchema.safeParse(req.body);
   if (!response.success) {
-    return res.status(400).json({ message: response.error.errors });
+    return res
+      .status(400)
+      .json({ success: false, message: response.error.errors });
   }
   const { email, password } = req.body;
 
   const userData = await user.findOne({ email });
   if (!userData) {
-    return res.status(404).json({ message: "Email Does not exists" });
+    return res
+      .status(404)
+      .json({ success: false, message: "Email Does not exists" });
   }
 
   if (!(await comparePasswords(password, userData.password))) {
-    return res.status(404).json({ message: "Invalid Email/Password" });
+    return res
+      .status(404)
+      .json({ success: false, message: "Invalid Email/Password" });
   }
 
   const token = await jwt.sign(
