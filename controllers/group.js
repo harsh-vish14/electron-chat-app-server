@@ -1,13 +1,9 @@
 const mongoose = require("mongoose");
-const {
-  encryptWithPublicKey,
-  groupKeysEncryption,
-} = require("../helper/encryption");
+const { groupKeysEncryption } = require("../helper/encryption");
 const { generateKeyPair } = require("../helper/generateKeys");
 const group = require("../models/group");
 const user = require("../models/user");
 const { isUserInList } = require("../helper/userPresent");
-const user = require("../models/user");
 const { chatsForGroup } = require("./chats");
 
 exports.makeGroup = async (req, res) => {
@@ -345,5 +341,3 @@ exports.changeGroupConfigurations = async (loggedUser, config) => {
   await user.updateOne({ _id: loggedUser._id }, { configurations: config });
   return { message: "Configurations Updated Successfully", success: true };
 };
-
-// TODO: all routes for above functions
