@@ -15,11 +15,12 @@ exports.getAllUsers = async (req, res) => {
 };
 
 exports.userSignUp = async (req, res) => {
-  const response = userSignInSchema.safeParse(req.body);
-  if (!response.success) {
-    return res
-      .status(400)
-      .json({ success: false, message: response.error.errors });
+  const response = userSignInSchema.validateToString(req.body);
+  if (response.error) {
+    return res.status(400).json({
+      success: false,
+      message: response.message,
+    });
   }
 
   const userExits = await user.findOne({ email: req.body.email });
@@ -72,11 +73,9 @@ exports.userSignUp = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const response = userLoginSchema.safeParse(req.body);
-  if (!response.success) {
-    return res
-      .status(400)
-      .json({ success: false, message: response.error.errors });
+  const response = userLoginSchema.validateToString(req.body);
+  if (response.error) {
+    return res.status(400).json({ success: false, message: response.message });
   }
   const { email, password } = req.body;
 
@@ -127,13 +126,13 @@ exports.login = async (req, res) => {
 };
 
 exports.updateDetails = async (req, res) => {
-  const response = userDetailsUpdates.safeParse(req.body);
-  const { name, email, avatar } = req.body;
+  const response = userDetailsUpdates.validateToString(req.body);
 
-  if (!response.success) {
-    return res.status(400).json({ message: response.error.errors });
+  if (response.error) {
+    return res.status(400).json({ message: response.message });
   }
 
+  const { name, email, avatar } = req.body;
   const userDetails = req.userDetails;
   await user.updateOne({ email }, { name, avatar });
 
