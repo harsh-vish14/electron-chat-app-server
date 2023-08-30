@@ -65,11 +65,9 @@ exports.userSignUp = async (req, res) => {
     expiration: thirtyDaysFromNow.toISOString(),
   });
 
-  // sending token in cookie
-  res.cookie("token", token, { httpOnly: true, secure: true }); // Make sure to use 'secure: true' if using HTTPS
   return res
     .status(200)
-    .json({ success: true, message: "Signing Successfully" });
+    .json({ token, success: true, message: "Signing Successfully" });
 };
 
 exports.login = async (req, res) => {
@@ -120,9 +118,10 @@ exports.login = async (req, res) => {
   );
 
   // sending token in cookie
-  res.cookie("token", token, { httpOnly: true, secure: true }); // Make sure to use 'secure: true' if using HTTPS
 
-  return res.status(200).json({ message: "Logged In Successfully" });
+  return res
+    .status(200)
+    .json({ token, success: true, message: "Logged In Successfully" });
 };
 
 exports.updateDetails = async (req, res) => {

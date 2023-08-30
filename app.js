@@ -18,6 +18,7 @@ app.use(express.json());
 app.use(removeEmptyValues);
 app.use(errorHandler);
 app.use(cookieParser());
+
 app.use("/api/v1", routes);
 
 // ZOD MIDDLEWARE
@@ -28,10 +29,10 @@ z.ZodObject.prototype.validateToString = function (data) {
       error: false,
     }; // No errors
   } catch (error) {
-    const errorMessages = error.errors.map((error) => error.message);
+    const errorMessages = error.errors[0].message;
     return {
       error: true,
-      message: errorMessages.join(", "),
+      message: errorMessages,
     };
   }
 };

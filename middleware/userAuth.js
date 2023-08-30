@@ -4,7 +4,7 @@ const { thirtyDaysWindow } = require("../helper/thirdyDayWindow");
 const user = require("../models/user");
 
 exports.userAuth = async (req, res, next) => {
-  const token = req.cookies.token;
+  const token = req.headers?.token;
 
   if (!token) {
     return res.status(401).send({ message: "User is not authorized" }); // Unauthorized
